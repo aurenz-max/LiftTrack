@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Plus, Clock } from 'lucide-react'
+import { Plus, Clock } from 'lucide-react'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRestTimer } from '@/hooks/useTimer'
 import { saveWorkoutSession } from '@/services/firestore'
 import { calculateWorkoutVolume } from '@/services/calculations'
-import { cn, formatVolume, formatDuration } from '@/lib/utils'
+import { formatVolume, formatDuration } from '@/lib/utils'
 import ExerciseCard from '@/components/workout/ExerciseCard'
 import RestTimerOverlay from '@/components/workout/RestTimerOverlay'
 import AddExerciseSheet from '@/components/workout/AddExerciseSheet'
@@ -17,8 +17,6 @@ export default function ActiveWorkoutPage() {
   const { user, userProfile } = useAuth()
 
   const activeWorkout = useWorkoutStore((s) => s.activeWorkout)
-  const currentIndex = useWorkoutStore((s) => s.activeWorkout?.currentExerciseIndex ?? 0)
-  const setCurrentIndex = useWorkoutStore((s) => s.setCurrentExerciseIndex)
   const endWorkout = useWorkoutStore((s) => s.endWorkout)
   const discardWorkout = useWorkoutStore((s) => s.discardWorkout)
 
@@ -43,7 +41,6 @@ export default function ActiveWorkoutPage() {
   if (!activeWorkout) return null
 
   const exercises = activeWorkout.exercises
-  const currentExercise = exercises[currentIndex]
   const totalVolume = calculateWorkoutVolume(exercises)
   const completedSets = exercises.reduce((sum, ex) => sum + ex.sets.filter((s) => s.completed).length, 0)
   const totalSets = exercises.reduce((sum, ex) => sum + ex.sets.length, 0)
@@ -56,7 +53,6 @@ export default function ActiveWorkoutPage() {
       const workout = endWorkout()
       if (!workout) return
       await saveWorkoutSession(user.uid, {
-        templateId: undefined,
         splitType: workout.splitType,
         name: workout.name,
         startedAt: new Date(workout.startedAt),
@@ -109,66 +105,27 @@ export default function ActiveWorkoutPage() {
         </div>
       </div>
 
-      {/* Exercise navigation tabs */}
-      <div className="flex items-center gap-1 px-4 py-2 overflow-x-auto border-b border-border">
-        {exercises.map((ex, i) => {
-          const done = ex.sets.every((s) => s.completed)
-          const active = i === currentIndex
-          return (
-            <button
-              key={i}
-              onClick={() => setCurrentIndex(i)}
-              className={cn(
-                'shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
-                active ? 'bg-primary text-primary-foreground' : done ? 'bg-success/20 text-success' : 'bg-secondary text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {ex.exerciseName.length > 15 ? ex.exerciseName.slice(0, 15) + '...' : ex.exerciseName}
-            </button>
-          )
-        })}
-        <button
-          onClick={() => setShowAddExercise(true)}
-          className="shrink-0 w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Current exercise card */}
-      <div className="flex-1 px-4 py-4">
-        {currentExercise && (
+      {/* All exercises */}
+      <div className="flex-1 px-4 py-4 space-y-8">
+        {exercises.map((exercise, i) => (
           <ExerciseCard
-            exercise={currentExercise}
-            exerciseIndex={currentIndex}
+            key={i}
+            exercise={exercise}
+            exerciseIndex={i}
             totalExercises={exercises.length}
             units={units}
             onStartRest={(duration) => restTimer.start(duration)}
           />
-        )}
-      </div>
+        ))}
 
-      {/* Bottom navigation arrows */}
-      <div className="sticky bottom-0 bg-background/90 backdrop-blur-md border-t border-border px-4 py-3">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-            disabled={currentIndex === 0}
-            className="flex items-center gap-1 px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" /> Prev
-          </button>
-          <span className="text-sm text-muted-foreground">
-            {currentIndex + 1} / {exercises.length}
-          </span>
-          <button
-            onClick={() => setCurrentIndex(Math.min(exercises.length - 1, currentIndex + 1))}
-            disabled={currentIndex === exercises.length - 1}
-            className="flex items-center gap-1 px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors"
-          >
-            Next <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+        {/* Add exercise button */}
+        <button
+          onClick={() => setShowAddExercise(true)}
+          className="w-full flex items-center justify-center gap-2 py-4 border border-dashed border-border rounded-xl text-sm text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Add Exercise
+        </button>
       </div>
 
       {/* Rest timer overlay */}

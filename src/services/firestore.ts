@@ -14,7 +14,7 @@ import {
   type Timestamp,
 } from 'firebase/firestore'
 import { db } from '@/config/firebase'
-import type { WorkoutSession, WorkoutExercise, SplitType } from '@/types'
+import type { WorkoutSession, WorkoutExercise, SplitType, Exercise } from '@/types'
 
 export async function saveWorkoutSession(
   userId: string,
@@ -69,6 +69,20 @@ export async function getLastWorkoutByType(
   return { id: docSnap.id, ...docSnap.data() } as WorkoutSession
 }
 
+export async function getWorkoutSessionsByType(
+  userId: string,
+  splitType: SplitType,
+  limitCount = 10
+): Promise<(WorkoutSession & { id: string })[]> {
+  const sessionsRef = collection(db, 'users', userId, 'workoutSessions')
+  const q = query(sessionsRef, orderBy('completedAt', 'desc'), limit(50))
+  const snapshot = await getDocs(q)
+  return snapshot.docs
+    .map((doc) => ({ id: doc.id, ...doc.data() } as WorkoutSession & { id: string }))
+    .filter((s) => s.splitType === splitType)
+    .slice(0, limitCount)
+}
+
 export async function getExerciseHistory(
   userId: string,
   exerciseId: string,
@@ -104,4 +118,36 @@ export async function deleteWorkoutSession(userId: string, sessionId: string): P
 export async function updateUserProfile(userId: string, data: Record<string, unknown>): Promise<void> {
   const profileRef = doc(db, 'users', userId, 'profile', 'settings')
   await updateDoc(profileRef, data)
+}
+
+// Custom exercises
+
+export async function saveCustomExercise(
+  userId: string,
+  exercise: Omit<Exercise, 'id' | 'isCustom' | 'createdBy'>
+): Promise<string> {
+  const exercisesRef = collection(db, 'users', userId, 'customExercises')
+  const docRef = await addDoc(exercisesRef, {
+    ...exercise,
+    isCustom: true,
+    createdBy: userId,
+    createdAt: serverTimestamp(),
+  })
+  return docRef.id
+}
+
+export async function getCustomExercises(userId: string): Promise<Exercise[]> {
+  const exercisesRef = collection(db, 'users', userId, 'customExercises')
+  const snapshot = await getDocs(exercisesRef)
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+    isCustom: true,
+    createdBy: userId,
+  })) as Exercise[]
+}
+
+export async function deleteCustomExercise(userId: string, exerciseId: string): Promise<void> {
+  const docRef = doc(db, 'users', userId, 'customExercises', exerciseId)
+  await deleteDoc(docRef)
 }

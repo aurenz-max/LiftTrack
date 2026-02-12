@@ -1,10 +1,14 @@
-import { Search } from 'lucide-react'
+import { useState } from 'react'
+import { Search, Plus, Trash2 } from 'lucide-react'
 import { useExercises } from '@/hooks/useExercises'
+import { useCustomExercises } from '@/hooks/useCustomExercises'
 import { MUSCLE_GROUP_LABELS, EQUIPMENT_LABELS } from '@/types'
 import type { MuscleGroup, Equipment } from '@/types'
 import { cn } from '@/lib/utils'
+import CreateExerciseSheet from '@/components/workout/CreateExerciseSheet'
 
 export default function ExercisesPage() {
+  const { customExercises, addCustomExercise, deleteCustomExercise } = useCustomExercises()
   const {
     exercises,
     searchQuery,
@@ -13,11 +17,21 @@ export default function ExercisesPage() {
     setMuscleFilter,
     equipmentFilter,
     setEquipmentFilter,
-  } = useExercises()
+  } = useExercises(customExercises)
+
+  const [showCreate, setShowCreate] = useState(false)
 
   return (
     <div className="px-4 py-6 max-w-lg mx-auto space-y-4">
-      <h1 className="text-2xl font-bold">Exercises</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Exercises</h1>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="p-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="w-5 h-5" />
+        </button>
+      </div>
 
       {/* Search */}
       <div className="relative">
@@ -71,19 +85,44 @@ export default function ExercisesPage() {
         {exercises.map((ex) => (
           <div
             key={ex.id}
-            className="px-3 py-3 rounded-xl hover:bg-secondary transition-colors"
+            className="flex items-center justify-between px-3 py-3 rounded-xl hover:bg-secondary transition-colors"
           >
-            <p className="text-sm font-medium">{ex.name}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {ex.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(', ')}
-              {' '}&middot;{' '}
-              {EQUIPMENT_LABELS[ex.equipment]}
-              {' '}&middot;{' '}
-              {ex.category}
-            </p>
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium">{ex.name}</p>
+                {ex.isCustom && (
+                  <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-primary/15 text-primary">
+                    Custom
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {ex.primaryMuscles.map((m) => MUSCLE_GROUP_LABELS[m]).join(', ')}
+                {' '}&middot;{' '}
+                {EQUIPMENT_LABELS[ex.equipment]}
+                {' '}&middot;{' '}
+                {ex.category}
+              </p>
+            </div>
+            {ex.isCustom && (
+              <button
+                onClick={() => deleteCustomExercise(ex.id)}
+                className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         ))}
       </div>
+
+      {showCreate && (
+        <CreateExerciseSheet
+          onClose={() => setShowCreate(false)}
+          onCreated={() => {}}
+          createExercise={addCustomExercise}
+        />
+      )}
     </div>
   )
 }

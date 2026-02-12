@@ -1,4 +1,4 @@
-import { Check, Minus, Plus } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { cn } from '@/lib/utils'
 import type { WorkoutSet } from '@/types'
@@ -21,16 +21,6 @@ export default function SetRow({ set, setIndex, exerciseIndex, onStartRest }: Pr
     onStartRest(90)
   }
 
-  const adjustWeight = (delta: number) => {
-    if (set.completed) return
-    updateSet(exerciseIndex, setIndex, { weight: Math.max(0, set.weight + delta) })
-  }
-
-  const adjustReps = (delta: number) => {
-    if (set.completed) return
-    updateSet(exerciseIndex, setIndex, { reps: Math.max(0, set.reps + delta) })
-  }
-
   return (
     <div
       className={cn(
@@ -47,14 +37,7 @@ export default function SetRow({ set, setIndex, exerciseIndex, onStartRest }: Pr
       </span>
 
       {/* Weight input */}
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => adjustWeight(-5)}
-          disabled={set.completed}
-          className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 shrink-0"
-        >
-          <Minus className="w-3 h-3" />
-        </button>
+      <div className="flex items-center justify-center">
         <input
           type="number"
           value={set.weight || ''}
@@ -69,24 +52,10 @@ export default function SetRow({ set, setIndex, exerciseIndex, onStartRest }: Pr
           )}
           placeholder="0"
         />
-        <button
-          onClick={() => adjustWeight(5)}
-          disabled={set.completed}
-          className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 shrink-0"
-        >
-          <Plus className="w-3 h-3" />
-        </button>
       </div>
 
       {/* Reps input */}
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => adjustReps(-1)}
-          disabled={set.completed}
-          className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 shrink-0"
-        >
-          <Minus className="w-3 h-3" />
-        </button>
+      <div className="flex items-center justify-center">
         <input
           type="number"
           value={set.reps || ''}
@@ -101,13 +70,6 @@ export default function SetRow({ set, setIndex, exerciseIndex, onStartRest }: Pr
           )}
           placeholder="0"
         />
-        <button
-          onClick={() => adjustReps(1)}
-          disabled={set.completed}
-          className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 shrink-0"
-        >
-          <Plus className="w-3 h-3" />
-        </button>
       </div>
 
       {/* Complete / Remove button */}

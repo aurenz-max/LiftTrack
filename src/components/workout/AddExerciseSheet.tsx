@@ -1,17 +1,22 @@
+import { useState } from 'react'
 import { X, Search, Plus } from 'lucide-react'
 import { useExercises } from '@/hooks/useExercises'
+import { useCustomExercises } from '@/hooks/useCustomExercises'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { cn } from '@/lib/utils'
 import type { MuscleGroup } from '@/types'
 import { MUSCLE_GROUP_LABELS, EQUIPMENT_LABELS } from '@/types'
+import CreateExerciseSheet from './CreateExerciseSheet'
 
 interface Props {
   onClose: () => void
 }
 
 export default function AddExerciseSheet({ onClose }: Props) {
-  const { exercises, searchQuery, setSearchQuery, muscleFilter, setMuscleFilter } = useExercises()
+  const { customExercises, addCustomExercise } = useCustomExercises()
+  const { exercises, searchQuery, setSearchQuery, muscleFilter, setMuscleFilter } = useExercises(customExercises)
   const addExercise = useWorkoutStore((s) => s.addExercise)
+  const [showCreate, setShowCreate] = useState(false)
 
   const handleAdd = (exerciseId: string, exerciseName: string) => {
     addExercise(exerciseId, exerciseName)
@@ -82,9 +87,28 @@ export default function AddExerciseSheet({ onClose }: Props) {
             {exercises.length === 0 && (
               <p className="text-center text-sm text-muted-foreground py-8">No exercises found</p>
             )}
+
+            {/* Create custom exercise button */}
+            <button
+              onClick={() => setShowCreate(true)}
+              className="w-full flex items-center gap-2 px-3 py-3 rounded-lg text-primary hover:bg-secondary transition-colors text-left"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="text-sm font-medium">Create Custom Exercise</span>
+            </button>
           </div>
         </div>
       </div>
+
+      {showCreate && (
+        <CreateExerciseSheet
+          onClose={() => setShowCreate(false)}
+          onCreated={(exercise) => {
+            handleAdd(exercise.id, exercise.name)
+          }}
+          createExercise={addCustomExercise}
+        />
+      )}
     </div>
   )
 }

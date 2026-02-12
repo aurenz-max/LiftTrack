@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Flame, Zap, Footprints, Plus } from 'lucide-react'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { DEFAULT_TEMPLATES } from '@/data/defaultTemplates'
+import StartWorkoutSheet from './StartWorkoutSheet'
 import type { SplitType } from '@/types'
 import { cn } from '@/lib/utils'
 
@@ -13,31 +15,15 @@ const SPLIT_CONFIG: Record<string, { icon: typeof Flame; color: string; bg: stri
 
 export default function QuickStartCard() {
   const navigate = useNavigate()
-  const startWorkout = useWorkoutStore((s) => s.startWorkout)
   const activeWorkout = useWorkoutStore((s) => s.activeWorkout)
+  const [selectedSplit, setSelectedSplit] = useState<SplitType | null>(null)
 
   const handleStart = (splitType: SplitType) => {
     if (activeWorkout) {
       navigate(`/workout/${activeWorkout.id}`)
       return
     }
-
-    const template = DEFAULT_TEMPLATES.find((t) => t.splitType === splitType)
-    if (!template) return
-
-    startWorkout(
-      splitType,
-      template.name,
-      template.exercises.map((ex) => ({
-        exerciseId: ex.exerciseId,
-        exerciseName: ex.exerciseName,
-        defaultSets: ex.defaultSets,
-        defaultReps: ex.defaultReps,
-      }))
-    )
-
-    const workoutId = useWorkoutStore.getState().activeWorkout?.id
-    if (workoutId) navigate(`/workout/${workoutId}`)
+    setSelectedSplit(splitType)
   }
 
   return (
@@ -63,6 +49,13 @@ export default function QuickStartCard() {
           )
         })}
       </div>
+
+      {selectedSplit && (
+        <StartWorkoutSheet
+          splitType={selectedSplit}
+          onClose={() => setSelectedSplit(null)}
+        />
+      )}
     </div>
   )
 }

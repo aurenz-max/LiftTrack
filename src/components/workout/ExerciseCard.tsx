@@ -1,7 +1,9 @@
-import { Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
+import { Plus, Trash2, History } from 'lucide-react'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { formatVolume } from '@/lib/utils'
 import SetRow from './SetRow'
+import ExerciseHistorySheet from './ExerciseHistorySheet'
 import type { WorkoutExercise } from '@/types'
 
 interface Props {
@@ -15,6 +17,7 @@ interface Props {
 export default function ExerciseCard({ exercise, exerciseIndex, totalExercises, units, onStartRest }: Props) {
   const addSet = useWorkoutStore((s) => s.addSet)
   const removeExercise = useWorkoutStore((s) => s.removeExercise)
+  const [showHistory, setShowHistory] = useState(false)
 
   return (
     <div className="space-y-4">
@@ -26,14 +29,22 @@ export default function ExerciseCard({ exercise, exerciseIndex, totalExercises, 
             Exercise {exerciseIndex + 1} of {totalExercises}
           </p>
         </div>
-        {totalExercises > 1 && (
+        <div className="flex items-center gap-1">
           <button
-            onClick={() => removeExercise(exerciseIndex)}
-            className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+            onClick={() => setShowHistory(true)}
+            className="p-2 text-muted-foreground hover:text-primary transition-colors"
           >
-            <Trash2 className="w-4 h-4" />
+            <History className="w-4 h-4" />
           </button>
-        )}
+          {totalExercises > 1 && (
+            <button
+              onClick={() => removeExercise(exerciseIndex)}
+              className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Set table header */}
@@ -74,6 +85,15 @@ export default function ExerciseCard({ exercise, exerciseIndex, totalExercises, 
           {formatVolume(exercise.volumeTotal)} {units}
         </span>
       </div>
+
+      {showHistory && (
+        <ExerciseHistorySheet
+          exerciseId={exercise.exerciseId}
+          exerciseName={exercise.exerciseName}
+          units={units}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
     </div>
   )
 }

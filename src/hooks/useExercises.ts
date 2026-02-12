@@ -2,13 +2,18 @@ import { useMemo, useState } from 'react'
 import { EXERCISE_DATABASE } from '@/data/exercises'
 import type { Exercise, MuscleGroup, Equipment } from '@/types'
 
-export function useExercises() {
+export function useExercises(customExercises: Exercise[] = []) {
   const [searchQuery, setSearchQuery] = useState('')
   const [muscleFilter, setMuscleFilter] = useState<MuscleGroup | ''>('')
   const [equipmentFilter, setEquipmentFilter] = useState<Equipment | ''>('')
 
+  const allExercisesDb = useMemo(
+    () => [...EXERCISE_DATABASE, ...customExercises],
+    [customExercises]
+  )
+
   const filteredExercises = useMemo(() => {
-    let results = EXERCISE_DATABASE
+    let results = allExercisesDb
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim()
@@ -32,10 +37,10 @@ export function useExercises() {
     }
 
     return results
-  }, [searchQuery, muscleFilter, equipmentFilter])
+  }, [searchQuery, muscleFilter, equipmentFilter, allExercisesDb])
 
   const getExerciseById = (id: string): Exercise | undefined => {
-    return EXERCISE_DATABASE.find((ex) => ex.id === id)
+    return allExercisesDb.find((ex) => ex.id === id)
   }
 
   return {
@@ -47,6 +52,6 @@ export function useExercises() {
     equipmentFilter,
     setEquipmentFilter,
     getExerciseById,
-    allExercises: EXERCISE_DATABASE,
+    allExercises: allExercisesDb,
   }
 }
