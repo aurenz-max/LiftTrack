@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react'
+import { Check, Undo2 } from 'lucide-react'
 import { useWorkoutStore } from '@/stores/workoutStore'
 import { cn } from '@/lib/utils'
 import type { WorkoutSet } from '@/types'
@@ -14,11 +14,16 @@ interface Props {
 export default function SetRow({ set, setIndex, exerciseIndex, onStartRest }: Props) {
   const updateSet = useWorkoutStore((s) => s.updateSet)
   const completeSet = useWorkoutStore((s) => s.completeSet)
+  const uncompleteSet = useWorkoutStore((s) => s.uncompleteSet)
 
   const handleComplete = () => {
     if (set.completed) return
     completeSet(exerciseIndex, setIndex)
     onStartRest(90)
+  }
+
+  const handleUncomplete = () => {
+    uncompleteSet(exerciseIndex, setIndex)
   }
 
   return (
@@ -75,9 +80,13 @@ export default function SetRow({ set, setIndex, exerciseIndex, onStartRest }: Pr
       {/* Complete / Remove button */}
       <div className="flex justify-center">
         {set.completed ? (
-          <div className="w-9 h-9 rounded-lg bg-success/20 flex items-center justify-center">
-            <Check className="w-4 h-4 text-success" />
-          </div>
+          <button
+            onClick={handleUncomplete}
+            className="w-9 h-9 rounded-lg bg-success/20 hover:bg-destructive/20 flex items-center justify-center group transition-colors"
+          >
+            <Check className="w-4 h-4 text-success group-hover:hidden" />
+            <Undo2 className="w-4 h-4 text-destructive hidden group-hover:block" />
+          </button>
         ) : (
           <button
             onClick={handleComplete}

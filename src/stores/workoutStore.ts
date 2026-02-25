@@ -28,6 +28,7 @@ interface WorkoutState {
 
   updateSet: (exerciseIndex: number, setIndex: number, updates: Partial<WorkoutSet>) => void
   completeSet: (exerciseIndex: number, setIndex: number) => void
+  uncompleteSet: (exerciseIndex: number, setIndex: number) => void
   addSet: (exerciseIndex: number) => void
   removeSet: (exerciseIndex: number, setIndex: number) => void
 
@@ -155,6 +156,19 @@ export const useWorkoutStore = create<WorkoutState>()(
         const exercise = { ...exercises[exerciseIndex] }
         const sets = [...exercise.sets]
         sets[setIndex] = { ...sets[setIndex], completed: true }
+        exercise.sets = sets
+        exercise.volumeTotal = calculateExerciseVolume(sets)
+        exercises[exerciseIndex] = exercise
+        set({ activeWorkout: { ...workout, exercises } })
+      },
+
+      uncompleteSet: (exerciseIndex, setIndex) => {
+        const workout = get().activeWorkout
+        if (!workout) return
+        const exercises = [...workout.exercises]
+        const exercise = { ...exercises[exerciseIndex] }
+        const sets = [...exercise.sets]
+        sets[setIndex] = { ...sets[setIndex], completed: false }
         exercise.sets = sets
         exercise.volumeTotal = calculateExerciseVolume(sets)
         exercises[exerciseIndex] = exercise
